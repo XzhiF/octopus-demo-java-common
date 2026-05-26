@@ -3,6 +3,7 @@ package com.octopus.demo.common.bean;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -13,7 +14,7 @@ class PageQueryBeanTest {
         PageQueryBean bean = new PageQueryBean();
         assertEquals(1, bean.getPage());
         assertEquals(20, bean.getSize());
-        assertNull(bean.getSort());
+        assertTrue(bean.getSort().isEmpty());
     }
 
     @Test
@@ -33,7 +34,7 @@ class PageQueryBeanTest {
         sort.put("age", "DESC");
         bean.setSort(sort);
 
-        LinkedHashMap<String, String> result = bean.getSort();
+        Map<String, String> result = bean.getSort();
         assertEquals(2, result.size());
 
         var entries = result.entrySet().iterator();
@@ -49,5 +50,42 @@ class PageQueryBeanTest {
         bean.setSort(sort);
 
         assertEquals("DESC", bean.getSort().get("createTime"));
+    }
+
+    @Test
+    void setPage_rejectsZeroAndNegative() {
+        PageQueryBean bean = new PageQueryBean();
+        assertThrows(IllegalArgumentException.class, () -> bean.setPage(0));
+        assertThrows(IllegalArgumentException.class, () -> bean.setPage(-1));
+    }
+
+    @Test
+    void setSize_rejectsZeroNegativeAndTooLarge() {
+        PageQueryBean bean = new PageQueryBean();
+        assertThrows(IllegalArgumentException.class, () -> bean.setSize(0));
+        assertThrows(IllegalArgumentException.class, () -> bean.setSize(-1));
+        assertThrows(IllegalArgumentException.class, () -> bean.setSize(101));
+    }
+
+    @Test
+    void getSort_returnsUnmodifiableMap() {
+        PageQueryBean bean = new PageQueryBean();
+        LinkedHashMap<String, String> sort = new LinkedHashMap<>();
+        sort.put("name", "ASC");
+        bean.setSort(sort);
+
+        Map<String, String> result = bean.getSort();
+        assertThrows(UnsupportedOperationException.class, () -> result.put("extra", "ASC"));
+    }
+
+    @Test
+    void setSort_makesDefensiveCopy() {
+        PageQueryBean bean = new PageQueryBean();
+        LinkedHashMap<String, String> sort = new LinkedHashMap<>();
+        sort.put("name", "ASC");
+        bean.setSort(sort);
+
+        sort.put("extra", "DESC");
+        assertEquals(1, bean.getSort().size());
     }
 }
