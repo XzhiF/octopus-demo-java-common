@@ -1,5 +1,7 @@
 package com.octopus.demo.common.bean;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -8,7 +10,7 @@ import java.util.List;
 public class PageResultBean<T> {
 
     private long count;
-    private List<T> list;
+    private List<T> list = Collections.emptyList();
 
     public long getCount() {
         return count;
@@ -23,6 +25,6 @@ public class PageResultBean<T> {
     }
 
     public void setList(List<T> list) {
-        this.list = list;
+        this.list = list == null ? Collections.emptyList() : new ArrayList<>(list);
     }
 }

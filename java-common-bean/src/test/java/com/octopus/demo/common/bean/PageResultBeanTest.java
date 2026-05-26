@@ -42,4 +42,32 @@ class PageResultBeanTest {
 
         assertEquals(Long.MAX_VALUE, bean.getCount());
     }
+
+    @Test
+    void defaultList_isEmptyNotNull() {
+        PageResultBean<String> bean = new PageResultBean<>();
+        assertNotNull(bean.getList());
+        assertTrue(bean.getList().isEmpty());
+    }
+
+    @Test
+    void setList_withNull_defaultsToEmptyList() {
+        PageResultBean<String> bean = new PageResultBean<>();
+        bean.setList(null);
+
+        assertNotNull(bean.getList());
+        assertTrue(bean.getList().isEmpty());
+    }
+
+    @Test
+    void setList_makesDefensiveCopy() {
+        List<String> original = new ArrayList<>();
+        original.add("a");
+
+        PageResultBean<String> bean = new PageResultBean<>();
+        bean.setList(original);
+
+        original.add("b");
+        assertEquals(1, bean.getList().size());
+    }
 }
