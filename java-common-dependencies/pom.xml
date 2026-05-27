@@ -25,6 +25,23 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- JWT library -->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-api</artifactId>
+                <version>0.12.6</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>0.12.6</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>0.12.6</version>
+            </dependency>
+
             <!-- Internal modules -->
             <dependency>
                 <groupId>com.octopus.demo</groupId>
@@ -34,6 +51,11 @@
             <dependency>
                 <groupId>com.octopus.demo</groupId>
                 <artifactId>java-common-auth</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.octopus.demo</groupId>
+                <artifactId>java-common-util</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

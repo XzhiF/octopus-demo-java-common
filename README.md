@@ -87,6 +87,52 @@ public class UserController {
 }
 ```
 
+### java-common-util
+
+工具模块，提供 JWT 生成与解析功能。
+
+| 类 | 说明 |
+|---|---|
+| `JwtUtil` | JWT 生成与解析核心类，使用 HMAC-SHA256 签名 |
+| `JwtProperties` | Spring Boot 配置属性（`octopus.jwt.secret-key`、`octopus.jwt.expiration-days`） |
+| `JwtAutoConfiguration` | Spring Boot 自动配置，自动注册 JwtUtil bean |
+| `JwtTokenExpiredException` | token 过期异常（code=401） |
+| `JwtTokenInvalidException` | token 无效异常（code=401） |
+
+引用方式：
+
+```xml
+<dependency>
+    <groupId>com.octopus.demo</groupId>
+    <artifactId>java-common-util</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+</dependency>
+```
+
+使用示例：
+
+```java
+// Spring Boot 自动配置方式（推荐）
+@Autowired
+private JwtUtil jwtUtil;
+
+String token = jwtUtil.generateToken(userId);
+Long userId = jwtUtil.parseToken(token);
+
+// 纯工具方式
+JwtUtil util = JwtUtil.createDefault();
+String token = util.generateToken(1L);
+```
+
+配置项：
+
+```yaml
+octopus:
+  jwt:
+    secret-key: ""       # 空=自动随机生成，生产环境必须配置固定密钥
+    expiration-days: 30  # 默认30天
+```
+
 ## 构建命令
 
 ```bash
