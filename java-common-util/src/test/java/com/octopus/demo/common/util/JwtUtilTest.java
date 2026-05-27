@@ -76,7 +76,9 @@ class JwtUtilTest {
     @Test
     void parseToken_malformedToken_throwsInvalidException() {
         JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
-        assertThrows(JwtTokenInvalidException.class, () -> util.parseToken("not-a-token"));
+        JwtTokenInvalidException ex = assertThrows(JwtTokenInvalidException.class,
+                () -> util.parseToken("not-a-token"));
+        assertEquals("JWT token invalid", ex.getMessage());
     }
 
     @Test
@@ -113,6 +115,19 @@ class JwtUtilTest {
         JwtUtil util2 = JwtUtil.createDefault();
         String token = util1.generateToken(1L);
         assertThrows(JwtTokenInvalidException.class, () -> util2.parseToken(token));
+    }
+
+    @Test
+    void create_shortSecretKey_throwsException() {
+        assertThrows(IllegalArgumentException.class, () -> JwtUtil.create("short-key", 30));
+    }
+
+    @Test
+    void create_exactly32ByteKey_works() {
+        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
+        assertNotNull(util);
+        String token = util.generateToken(1L);
+        assertEquals(1L, util.parseToken(token));
     }
 
     @Test

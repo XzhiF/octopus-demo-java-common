@@ -45,7 +45,11 @@ public final class JwtUtil {
         if (secretKey == null || secretKey.isEmpty()) {
             throw new IllegalArgumentException("Secret key must not be null or empty");
         }
-        return new JwtUtil(Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8)), expirationDays);
+        byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length < 32) {
+            throw new IllegalArgumentException("Secret key must be at least 32 UTF-8 bytes for HMAC-SHA256");
+        }
+        return new JwtUtil(Keys.hmacShaKeyFor(keyBytes), expirationDays);
     }
 
     /**
@@ -93,7 +97,7 @@ public final class JwtUtil {
         } catch (ExpiredJwtException e) {
             throw new JwtTokenExpiredException();
         } catch (Exception e) {
-            throw new JwtTokenInvalidException(e.getMessage());
+            throw new JwtTokenInvalidException("JWT token invalid");
         }
     }
 
@@ -115,7 +119,7 @@ public final class JwtUtil {
         } catch (ExpiredJwtException e) {
             return true;
         } catch (Exception e) {
-            throw new JwtTokenInvalidException(e.getMessage());
+            throw new JwtTokenInvalidException("JWT token invalid");
         }
     }
 
