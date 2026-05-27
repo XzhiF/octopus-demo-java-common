@@ -2,6 +2,13 @@ package com.octopus.demo.common.util;
 
 import org.junit.jupiter.api.Test;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class JwtUtilTest {
@@ -137,5 +144,37 @@ class JwtUtilTest {
         String token = util.generateToken(largeId);
         Long userId = util.parseToken(token);
         assertEquals(largeId, userId);
+    }
+
+    @Test
+    void parseToken_expiredToken_preservesCause() {
+        JwtUtil util = JwtUtil.create(TEST_KEY_32, -1);
+        String token = util.generateToken(1L);
+        JwtTokenExpiredException ex = assertThrows(JwtTokenExpiredException.class,
+                () -> util.parseToken(token));
+        assertNotNull(ex.getCause(), "Expired exception should preserve JJWT cause");
+    }
+
+    @Test
+    void parseToken_invalidToken_preservesCause() {
+        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
+        JwtTokenInvalidException ex = assertThrows(JwtTokenInvalidException.class,
+                () -> util.parseToken("not-a-token"));
+        assertNotNull(ex.getCause(), "Invalid exception should preserve cause");
+    }
+
+    @Test
+    void parseToken_tokenWithNonNumericSubject_throwsInvalidException() {
+        SecretKey key = Keys.hmacShaKeyFor(TEST_KEY_32.getBytes(StandardCharsets.UTF_8));
+        String token = Jwts.builder()
+                .subject("not-a-number")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 86400000L))
+                .signWith(key)
+                .compact();
+        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
+        JwtTokenInvalidException ex = assertThrows(JwtTokenInvalidException.class,
+                () -> util.parseToken(token));
+        assertEquals("Invalid userId in token", ex.getMessage());
     }
 }

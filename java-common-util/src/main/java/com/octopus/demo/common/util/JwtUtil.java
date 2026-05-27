@@ -95,9 +95,11 @@ public final class JwtUtil {
                     .getPayload();
             return Long.valueOf(claims.getSubject());
         } catch (ExpiredJwtException e) {
-            throw new JwtTokenExpiredException();
+            throw new JwtTokenExpiredException(e);
+        } catch (NumberFormatException e) {
+            throw new JwtTokenInvalidException("Invalid userId in token", e);
         } catch (Exception e) {
-            throw new JwtTokenInvalidException("JWT token invalid");
+            throw new JwtTokenInvalidException("JWT token invalid", e);
         }
     }
 
@@ -119,7 +121,7 @@ public final class JwtUtil {
         } catch (ExpiredJwtException e) {
             return true;
         } catch (Exception e) {
-            throw new JwtTokenInvalidException("JWT token invalid");
+            throw new JwtTokenInvalidException("JWT token invalid", e);
         }
     }
 

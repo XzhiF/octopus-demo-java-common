@@ -25,6 +25,9 @@ public class JwtProperties {
     }
 
     public void setExpirationDays(long expirationDays) {
+        if (expirationDays <= 0) {
+            throw new IllegalArgumentException("expirationDays must be > 0");
+        }
         this.expirationDays = expirationDays;
     }
 }

@@ -26,4 +26,16 @@ class JwtPropertiesTest {
         assertEquals("test-key", props.getSecretKey());
         assertEquals(7, props.getExpirationDays());
     }
+
+    @Test
+    void setExpirationDays_zero_throwsException() {
+        JwtProperties props = new JwtProperties();
+        assertThrows(IllegalArgumentException.class, () -> props.setExpirationDays(0));
+    }
+
+    @Test
+    void setExpirationDays_negative_throwsException() {
+        JwtProperties props = new JwtProperties();
+        assertThrows(IllegalArgumentException.class, () -> props.setExpirationDays(-1));
+    }
 }
