@@ -52,7 +52,9 @@ public final class HighlightingUtils {
             .filter(k -> k != null && !k.isEmpty())
             .sorted((a, b) -> b.length() - a.length())
             .toList();
-        // Phase 1: Replace each keyword occurrence with a unique placeholder,
+        // Phase 1: Replace each keyword occurrence with a unique placeholder.
+            // Uses Unicode Private Use Area (U+E000/U+E001) as sentinel characters
+            // to avoid collision with normal text, paired with a readable prefix.
         // preserving original case in a lookup map. Longer keywords are processed
         // first so shorter keywords cannot match inside already-marked segments.
         String result = text;
@@ -65,7 +67,7 @@ public final class HighlightingUtils {
             StringBuilder sb = new StringBuilder();
             int matchIndex = 0;
             while (matcher.find()) {
-                String placeholder = "" + i + "_" + matchIndex + "";
+                String placeholder = "OCTOPUS_PH" + i + "_" + matchIndex + "";
                 placeholderToReplacement.put(placeholder,
                     prefix + matcher.group() + suffix);
                 matcher.appendReplacement(sb,

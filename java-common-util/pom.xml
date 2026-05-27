@@ -12,7 +12,7 @@
 
     <artifactId>java-common-util</artifactId>
     <name>java-common-util</name>
-    <description>Utility module providing JWT generation and parsing using JJWT</description>
+    <description>Utility module providing JWT, AES encryption, MD5 hashing, and text highlighting</description>
 
     <dependencies>
         <dependency>

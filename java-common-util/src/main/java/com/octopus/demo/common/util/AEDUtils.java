@@ -10,8 +10,11 @@ import java.util.Objects;
 /**
  * AES encrypt/decrypt utility using AES/CBC/PKCS5Padding.
  * Pure static utility — configure via update(AEDConfig), use via static methods.
- * Default secret key: "octopus-aes-128!" (16 bytes for AES-128).
- * Default IV: "octopus-aes-iv16" (16 bytes).
+ * Default expiration: development-only defaults — production MUST call update().
+ *
+ * Thread safety: encrypt()/decrypt() without explicit key/iv are synchronized
+ * to ensure secretKey and ivParameter are read atomically (they must be paired).
+ * Overloads with explicit key/iv are not synchronized (caller manages the pair).
  */
 public final class AEDUtils {
 
@@ -35,7 +38,7 @@ public final class AEDUtils {
         }
     }
 
-    public static String encrypt(String plaintext) {
+    public static synchronized String encrypt(String plaintext) {
         return encrypt(plaintext, secretKey, ivParameter);
     }
 
@@ -54,7 +57,7 @@ public final class AEDUtils {
         }
     }
 
-    public static String decrypt(String ciphertext) {
+    public static synchronized String decrypt(String ciphertext) {
         return decrypt(ciphertext, secretKey, ivParameter);
     }
 

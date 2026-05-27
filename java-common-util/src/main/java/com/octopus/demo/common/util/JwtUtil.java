@@ -15,8 +15,10 @@ import java.util.Objects;
 /**
  * JWT generation and parsing utility using HMAC-SHA256.
  * Pure static utility — configure via update(JwtConfig), use via static methods.
- * Default secret key: "octopus-jwt-secret-key-default!!" (32 bytes).
  * Default expiration: 30 days.
+ *
+ * WARNING: The default secret key is for development/testing only.
+ * Production environments MUST call update(JwtConfig) with a strong, unique key.
  */
 public final class JwtUtil {
 
@@ -47,12 +49,7 @@ public final class JwtUtil {
         }
         long nowMillis = System.currentTimeMillis();
         Date now = new Date(nowMillis);
-        Date expiration;
-        if (expirationDays <= 0) {
-            expiration = new Date(nowMillis - 1000);
-        } else {
-            expiration = new Date(nowMillis + expirationDays * 24 * 60 * 60 * 1000L);
-        }
+        Date expiration = new Date(nowMillis + expirationDays * 24 * 60 * 60 * 1000L);
 
         return Jwts.builder()
                 .subject(String.valueOf(userId))
