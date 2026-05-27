@@ -44,6 +44,49 @@ BOM 模块，统一管理所有依赖版本。其他项目通过 `<scope>import<
 </dependency>
 ```
 
+### java-common-auth
+
+认证模块，提供基于注解的 userId 提取机制。
+
+| 类 | 说明 |
+|---|---|
+| `@RequireAuth` | 标注 Controller 类或方法，支持 `required` 参数（默认 true） |
+| `UserContext` | ThreadLocal 包装类，获取当前请求的 userId |
+| `AuthInterceptor` | Spring MVC 拦截器，从 X-User-Id header 提取 userId |
+| `AuthAutoConfiguration` | Spring Boot 自动配置，自动注册拦截器 |
+
+引用方式：
+
+```xml
+<dependency>
+    <groupId>com.octopus.demo</groupId>
+    <artifactId>java-common-auth</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+</dependency>
+```
+
+使用示例：
+
+```java
+@RestController
+@RequireAuth  // 类级别，所有方法默认需要 userId
+public class UserController {
+
+    @GetMapping("/profile")
+    public R<?> getProfile() {
+        Long userId = UserContext.getUserId();
+        // ...
+    }
+
+    @GetMapping("/public-info")
+    @RequireAuth(required = false)  // 方法级覆盖，userId 可选
+    public R<?> getPublicInfo() {
+        Long userId = UserContext.getUserId();  // 可能为 null
+        // ...
+    }
+}
+```
+
 ## 构建命令
 
 ```bash
