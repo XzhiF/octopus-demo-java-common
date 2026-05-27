@@ -1,5 +1,6 @@
 package com.octopus.demo.common.auth;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
@@ -7,6 +8,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Intercepts requests to Controller methods/classes annotated with @RequireAuth.
@@ -16,6 +18,7 @@ import java.io.IOException;
 public class AuthInterceptor implements HandlerInterceptor {
 
     private static final String USER_ID_HEADER = "X-User-Id";
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IOException {
@@ -29,10 +32,17 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
 
         String userIdStr = request.getHeader(USER_ID_HEADER);
+        if (userIdStr != null) {
+            userIdStr = userIdStr.trim();
+        }
 
-        if (userIdStr != null && !userIdStr.isBlank()) {
+        if (userIdStr != null && !userIdStr.isEmpty()) {
             try {
-                Long userId = Long.parseLong(userIdStr);
+                long userId = Long.parseLong(userIdStr);
+                if (userId <= 0) {
+                    writeErrorResponse(response, HttpStatus.BAD_REQUEST.value(), "Invalid userId format");
+                    return false;
+                }
                 UserContext.setUserId(userId);
                 return true;
             } catch (NumberFormatException e) {
@@ -64,7 +74,7 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     private void writeErrorResponse(HttpServletResponse response, int statusCode, String message) throws IOException {
         response.setStatus(statusCode);
-        response.setContentType("application/json");
-        response.getWriter().write("{\"code\":" + statusCode + ",\"msg\":\"" + message + "\"}");
+        response.setContentType("application/json;charset=UTF-8");
+        OBJECT_MAPPER.writeValue(response.getWriter(), Map.of("code", statusCode, "msg", message));
     }
 }
