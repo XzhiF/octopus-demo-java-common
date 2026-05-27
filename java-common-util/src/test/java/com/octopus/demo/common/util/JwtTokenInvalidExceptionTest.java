@@ -30,4 +30,13 @@ class JwtTokenInvalidExceptionTest {
         JwtTokenInvalidException ex = new JwtTokenInvalidException("JWT token invalid");
         assertEquals("JWT token invalid", ex.getMessage());
     }
+
+    @Test
+    void causeConstructor_preservesMessageAndCause() {
+        Throwable originalCause = new RuntimeException("parse error");
+        JwtTokenInvalidException ex = new JwtTokenInvalidException("invalid signature", originalCause);
+        assertEquals(401, ex.getCode());
+        assertEquals("invalid signature", ex.getMessage());
+        assertSame(originalCause, ex.getCause());
+    }
 }

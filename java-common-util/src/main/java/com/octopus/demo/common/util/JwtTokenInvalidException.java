@@ -10,4 +10,8 @@ public class JwtTokenInvalidException extends BaseException {
     public JwtTokenInvalidException(String message) {
         super(401, message);
     }
+
+    public JwtTokenInvalidException(String message, Throwable cause) {
+        super(401, message, cause);
+    }
 }

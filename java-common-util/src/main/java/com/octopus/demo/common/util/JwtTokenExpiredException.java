@@ -10,4 +10,8 @@ public class JwtTokenExpiredException extends BaseException {
     public JwtTokenExpiredException() {
         super(401, "JWT token expired");
     }
+
+    public JwtTokenExpiredException(Throwable cause) {
+        super(401, "JWT token expired", cause);
+    }
 }

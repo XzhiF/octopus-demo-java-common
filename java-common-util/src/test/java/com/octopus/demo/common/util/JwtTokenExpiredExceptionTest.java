@@ -24,4 +24,13 @@ class JwtTokenExpiredExceptionTest {
         JwtTokenExpiredException ex = new JwtTokenExpiredException();
         assertEquals("JWT token expired", ex.getMessage());
     }
+
+    @Test
+    void causeConstructor_preservesCause() {
+        Throwable originalCause = new RuntimeException("original");
+        JwtTokenExpiredException ex = new JwtTokenExpiredException(originalCause);
+        assertEquals(401, ex.getCode());
+        assertEquals("JWT token expired", ex.getMessage());
+        assertSame(originalCause, ex.getCause());
+    }
 }
