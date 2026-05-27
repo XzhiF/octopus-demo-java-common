@@ -10,53 +10,38 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * JWT generation and parsing utility using HMAC-SHA256.
- * Immutable instance — create via static factory methods.
+ * Pure static utility — configure via update(JwtConfig), use via static methods.
+ * Default secret key: "octopus-jwt-secret-key-default!!" (32 bytes).
+ * Default expiration: 30 days.
  */
 public final class JwtUtil {
 
-    private static final long DEFAULT_EXPIRATION_DAYS = 30;
-    private static final int RANDOM_KEY_BYTE_LENGTH = 32;
+    private static volatile String secretKey = "octopus-jwt-secret-key-default!!";
+    private static volatile long expirationDays = 30;
+    private static volatile SecretKey cachedSigningKey = deriveKey(secretKey);
 
-    private final SecretKey secretKey;
-    private final long expirationDays;
-
-    private JwtUtil(SecretKey secretKey, long expirationDays) {
-        this.secretKey = secretKey;
-        this.expirationDays = expirationDays;
-    }
+    private JwtUtil() {}
 
     /**
-     * Creates a JwtUtil with a random 256-bit secret key and 30-day default expiration.
-     * Each invocation generates a different random key — use create(secretKey, days)
-     * for production scenarios requiring fixed keys.
+     * Updates JWT configuration. Synchronized for thread-safe writes.
+     * secretKey may be null in JwtConfig to indicate no key change.
+     * expirationDays may be negative for testing expired tokens.
      */
-    public static JwtUtil createDefault() {
-        return create(generateRandomSecretKeyString(), DEFAULT_EXPIRATION_DAYS);
-    }
-
-    /**
-     * Creates a JwtUtil with the specified secret key string and expiration days.
-     * The key string must be at least 32 UTF-8 bytes for HMAC-SHA256.
-     */
-    public static JwtUtil create(String secretKey, long expirationDays) {
-        if (secretKey == null || secretKey.isEmpty()) {
-            throw new IllegalArgumentException("Secret key must not be null or empty");
+    public static synchronized void update(JwtConfig config) {
+        Objects.requireNonNull(config, "JwtConfig must not be null");
+        if (config.secretKey() != null) {
+            validateKeyLength(config.secretKey());
+            secretKey = config.secretKey();
+            cachedSigningKey = deriveKey(config.secretKey());
         }
-        byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
-        if (keyBytes.length < 32) {
-            throw new IllegalArgumentException("Secret key must be at least 32 UTF-8 bytes for HMAC-SHA256");
-        }
-        return new JwtUtil(Keys.hmacShaKeyFor(keyBytes), expirationDays);
+        expirationDays = config.expirationDays();
     }
 
-    /**
-     * Generates a JWT token containing the given userId in the "sub" claim.
-     * @param userId must be > 0
-     */
-    public String generateToken(long userId) {
+    public static String generateToken(long userId) {
         if (userId <= 0) {
             throw new IllegalArgumentException("userId must be > 0");
         }
@@ -73,23 +58,17 @@ public final class JwtUtil {
                 .subject(String.valueOf(userId))
                 .issuedAt(now)
                 .expiration(expiration)
-                .signWith(secretKey)
+                .signWith(cachedSigningKey)
                 .compact();
     }
 
-    /**
-     * Parses a JWT token and returns the userId from the "sub" claim.
-     * @throws JwtTokenExpiredException if the token has expired
-     * @throws JwtTokenInvalidException if the token is malformed or has invalid signature
-     * @throws IllegalArgumentException if token is null or empty
-     */
-    public Long parseToken(String token) {
+    public static Long parseToken(String token) {
         if (token == null || token.isEmpty()) {
             throw new IllegalArgumentException("Token must not be null or empty");
         }
         try {
             Claims claims = Jwts.parser()
-                    .verifyWith(secretKey)
+                    .verifyWith(cachedSigningKey)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
@@ -103,17 +82,13 @@ public final class JwtUtil {
         }
     }
 
-    /**
-     * Checks if a JWT token has expired.
-     * @throws JwtTokenInvalidException if the token is malformed
-     */
-    public boolean isTokenExpired(String token) {
+    public static boolean isTokenExpired(String token) {
         if (token == null || token.isEmpty()) {
             throw new IllegalArgumentException("Token must not be null or empty");
         }
         try {
             Claims claims = Jwts.parser()
-                    .verifyWith(secretKey)
+                    .verifyWith(cachedSigningKey)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
@@ -125,13 +100,21 @@ public final class JwtUtil {
         }
     }
 
-    /**
-     * Generates a random 256-bit secret key as a Base64-encoded string.
-     * Suitable for passing to create() or configuring in application properties.
-     */
-    static String generateRandomSecretKeyString() {
-        byte[] keyBytes = new byte[RANDOM_KEY_BYTE_LENGTH];
+    public static String generateRandomSecretKeyString() {
+        byte[] keyBytes = new byte[32];
         new SecureRandom().nextBytes(keyBytes);
         return Base64.getEncoder().encodeToString(keyBytes);
+    }
+
+    private static SecretKey deriveKey(String key) {
+        return Keys.hmacShaKeyFor(key.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static void validateKeyLength(String key) {
+        byte[] bytes = key.getBytes(StandardCharsets.UTF_8);
+        if (bytes.length < 32) {
+            throw new IllegalArgumentException(
+                "Secret key must be at least 32 UTF-8 bytes for HMAC-SHA256, got " + bytes.length);
+        }
     }
 }

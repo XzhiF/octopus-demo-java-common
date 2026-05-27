@@ -1,169 +1,166 @@
 package com.octopus.demo.common.util;
 
-import org.junit.jupiter.api.Test;
-
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 
 class JwtUtilTest {
 
     private static final String TEST_KEY_32 = "test-secret-key-for-hmac-sha256!";
     private static final String TEST_KEY_ALT = "alt-secret-key-for-hmac-sha256!!";
+    private static final String DEFAULT_KEY = "octopus-jwt-secret-key-default!!";
+
+    @BeforeEach
+    void resetConfig() {
+        JwtUtil.update(new JwtConfig(DEFAULT_KEY, 30));
+    }
 
     @Test
+    @DisplayName("generateToken returns non-empty string")
     void generateToken_returnsNonEmptyString() {
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
-        String token = util.generateToken(1L);
-        assertNotNull(token);
-        assertFalse(token.isEmpty());
+        String token = JwtUtil.generateToken(1L);
+        assertThat(token).isNotEmpty();
     }
 
     @Test
+    @DisplayName("parseToken returns userId from generated token")
     void parseToken_returnsUserId() {
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
-        String token = util.generateToken(42L);
-        Long userId = util.parseToken(token);
-        assertEquals(42L, userId);
+        String token = JwtUtil.generateToken(42L);
+        Long userId = JwtUtil.parseToken(token);
+        assertThat(userId).isEqualTo(42L);
     }
 
     @Test
+    @DisplayName("generate and parse with custom key via update works")
     void generateAndParse_withCustomKey_works() {
         String key = JwtUtil.generateRandomSecretKeyString();
-        JwtUtil util = JwtUtil.create(key, 30);
-        String token = util.generateToken(100L);
-        Long userId = util.parseToken(token);
-        assertEquals(100L, userId);
+        JwtUtil.update(new JwtConfig(key, 30));
+        String token = JwtUtil.generateToken(100L);
+        Long userId = JwtUtil.parseToken(token);
+        assertThat(userId).isEqualTo(100L);
     }
 
     @Test
+    @DisplayName("token from one key cannot be parsed by another key")
     void generateAndParse_differentKeys_fails() {
-        JwtUtil util1 = JwtUtil.create(TEST_KEY_32, 30);
-        JwtUtil util2 = JwtUtil.create(TEST_KEY_ALT, 30);
-        String token = util1.generateToken(1L);
-        assertThrows(JwtTokenInvalidException.class, () -> util2.parseToken(token));
+        JwtUtil.update(new JwtConfig(TEST_KEY_32, 30));
+        String token = JwtUtil.generateToken(1L);
+        JwtUtil.update(new JwtConfig(TEST_KEY_ALT, 30));
+        assertThatThrownBy(() -> JwtUtil.parseToken(token))
+            .isInstanceOf(JwtTokenInvalidException.class);
     }
 
     @Test
+    @DisplayName("generateToken with zero userId throws IllegalArgumentException")
     void generateToken_zeroUserId_throwsException() {
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
-        assertThrows(IllegalArgumentException.class, () -> util.generateToken(0L));
+        assertThatThrownBy(() -> JwtUtil.generateToken(0L))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
+    @DisplayName("generateToken with negative userId throws IllegalArgumentException")
     void generateToken_negativeUserId_throwsException() {
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
-        assertThrows(IllegalArgumentException.class, () -> util.generateToken(-1L));
+        assertThatThrownBy(() -> JwtUtil.generateToken(-1L))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
+    @DisplayName("parseToken with expired token throws JwtTokenExpiredException")
     void parseToken_expiredToken_throwsExpiredException() {
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, -1);
-        String token = util.generateToken(1L);
-        assertThrows(JwtTokenExpiredException.class, () -> util.parseToken(token));
+        JwtUtil.update(new JwtConfig(TEST_KEY_32, -1));
+        String token = JwtUtil.generateToken(1L);
+        assertThatThrownBy(() -> JwtUtil.parseToken(token))
+            .isInstanceOf(JwtTokenExpiredException.class);
     }
 
     @Test
+    @DisplayName("parseToken with null token throws IllegalArgumentException")
     void parseToken_nullToken_throwsException() {
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
-        assertThrows(IllegalArgumentException.class, () -> util.parseToken(null));
+        assertThatThrownBy(() -> JwtUtil.parseToken(null))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
+    @DisplayName("parseToken with empty token throws IllegalArgumentException")
     void parseToken_emptyToken_throwsException() {
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
-        assertThrows(IllegalArgumentException.class, () -> util.parseToken(""));
+        assertThatThrownBy(() -> JwtUtil.parseToken(""))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
+    @DisplayName("parseToken with malformed token throws JwtTokenInvalidException")
     void parseToken_malformedToken_throwsInvalidException() {
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
-        JwtTokenInvalidException ex = assertThrows(JwtTokenInvalidException.class,
-                () -> util.parseToken("not-a-token"));
-        assertEquals("JWT token invalid", ex.getMessage());
+        assertThatThrownBy(() -> JwtUtil.parseToken("not-a-token"))
+            .isInstanceOf(JwtTokenInvalidException.class)
+            .hasMessage("JWT token invalid");
     }
 
     @Test
+    @DisplayName("isTokenExpired with valid token returns false")
     void isTokenExpired_validToken_returnsFalse() {
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
-        String token = util.generateToken(1L);
-        assertFalse(util.isTokenExpired(token));
+        String token = JwtUtil.generateToken(1L);
+        assertThat(JwtUtil.isTokenExpired(token)).isFalse();
     }
 
     @Test
+    @DisplayName("isTokenExpired with expired token returns true")
     void isTokenExpired_expiredToken_returnsTrue() {
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, -1);
-        String token = util.generateToken(1L);
-        assertTrue(util.isTokenExpired(token));
+        JwtUtil.update(new JwtConfig(TEST_KEY_32, -1));
+        String token = JwtUtil.generateToken(1L);
+        assertThat(JwtUtil.isTokenExpired(token)).isTrue();
     }
 
     @Test
+    @DisplayName("isTokenExpired with malformed token throws JwtTokenInvalidException")
     void isTokenExpired_malformedToken_throwsInvalidException() {
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
-        assertThrows(JwtTokenInvalidException.class, () -> util.isTokenExpired("bad-token"));
+        assertThatThrownBy(() -> JwtUtil.isTokenExpired("bad-token"))
+            .isInstanceOf(JwtTokenInvalidException.class);
     }
 
     @Test
-    void createDefault_producesWorkingInstance() {
-        JwtUtil util = JwtUtil.createDefault();
-        String token = util.generateToken(1L);
-        Long userId = util.parseToken(token);
-        assertEquals(1L, userId);
+    @DisplayName("update with short secretKey throws IllegalArgumentException")
+    void update_shortSecretKey_throwsException() {
+        assertThatThrownBy(() -> JwtUtil.update(new JwtConfig("short-key", 30)))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("32");
     }
 
     @Test
-    void createDefault_differentInstances_differentKeys() {
-        JwtUtil util1 = JwtUtil.createDefault();
-        JwtUtil util2 = JwtUtil.createDefault();
-        String token = util1.generateToken(1L);
-        assertThrows(JwtTokenInvalidException.class, () -> util2.parseToken(token));
-    }
-
-    @Test
-    void create_shortSecretKey_throwsException() {
-        assertThrows(IllegalArgumentException.class, () -> JwtUtil.create("short-key", 30));
-    }
-
-    @Test
-    void create_exactly32ByteKey_works() {
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
-        assertNotNull(util);
-        String token = util.generateToken(1L);
-        assertEquals(1L, util.parseToken(token));
-    }
-
-    @Test
+    @DisplayName("generateToken with large userId works")
     void generateToken_largeUserId_works() {
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
         long largeId = Long.MAX_VALUE;
-        String token = util.generateToken(largeId);
-        Long userId = util.parseToken(token);
-        assertEquals(largeId, userId);
+        String token = JwtUtil.generateToken(largeId);
+        assertThat(JwtUtil.parseToken(token)).isEqualTo(largeId);
     }
 
     @Test
+    @DisplayName("parseToken expired exception preserves cause")
     void parseToken_expiredToken_preservesCause() {
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, -1);
-        String token = util.generateToken(1L);
-        JwtTokenExpiredException ex = assertThrows(JwtTokenExpiredException.class,
-                () -> util.parseToken(token));
-        assertNotNull(ex.getCause(), "Expired exception should preserve JJWT cause");
+        JwtUtil.update(new JwtConfig(TEST_KEY_32, -1));
+        String token = JwtUtil.generateToken(1L);
+        JwtTokenExpiredException ex = catchThrowableOfType(
+            () -> JwtUtil.parseToken(token), JwtTokenExpiredException.class);
+        assertThat(ex.getCause()).isNotNull();
     }
 
     @Test
+    @DisplayName("parseToken invalid exception preserves cause")
     void parseToken_invalidToken_preservesCause() {
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
-        JwtTokenInvalidException ex = assertThrows(JwtTokenInvalidException.class,
-                () -> util.parseToken("not-a-token"));
-        assertNotNull(ex.getCause(), "Invalid exception should preserve cause");
+        JwtTokenInvalidException ex = catchThrowableOfType(
+            () -> JwtUtil.parseToken("not-a-token"), JwtTokenInvalidException.class);
+        assertThat(ex.getCause()).isNotNull();
     }
 
     @Test
+    @DisplayName("parseToken with non-numeric subject throws JwtTokenInvalidException")
     void parseToken_tokenWithNonNumericSubject_throwsInvalidException() {
         SecretKey key = Keys.hmacShaKeyFor(TEST_KEY_32.getBytes(StandardCharsets.UTF_8));
         String token = Jwts.builder()
@@ -172,9 +169,24 @@ class JwtUtilTest {
                 .expiration(new Date(System.currentTimeMillis() + 86400000L))
                 .signWith(key)
                 .compact();
-        JwtUtil util = JwtUtil.create(TEST_KEY_32, 30);
-        JwtTokenInvalidException ex = assertThrows(JwtTokenInvalidException.class,
-                () -> util.parseToken(token));
-        assertEquals("Invalid userId in token", ex.getMessage());
+        JwtUtil.update(new JwtConfig(TEST_KEY_32, 30));
+        assertThatThrownBy(() -> JwtUtil.parseToken(token))
+            .isInstanceOf(JwtTokenInvalidException.class)
+            .hasMessage("Invalid userId in token");
+    }
+
+    @Test
+    @DisplayName("default config works without update")
+    void defaultConfig_worksWithoutUpdate() {
+        String token = JwtUtil.generateToken(1L);
+        assertThat(JwtUtil.parseToken(token)).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("update null config throws NullPointerException")
+    void update_nullConfig_throwsException() {
+        assertThatThrownBy(() -> JwtUtil.update(null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessageContaining("JwtConfig");
     }
 }
