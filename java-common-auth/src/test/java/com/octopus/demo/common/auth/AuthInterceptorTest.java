@@ -75,6 +75,46 @@ class AuthInterceptorTest {
     }
 
     @Test
+    void preHandle_zeroUserId_returns400() throws Exception {
+        request.addHeader("X-User-Id", "0");
+        HandlerMethod handler = new HandlerMethod(new RequiredTrueController(), "handleMethod");
+        boolean result = interceptor.preHandle(request, response, handler);
+        assertFalse(result);
+        assertEquals(400, response.getStatus());
+        assertTrue(response.getContentAsString().contains("Invalid userId format"));
+    }
+
+    @Test
+    void preHandle_negativeUserId_returns400() throws Exception {
+        request.addHeader("X-User-Id", "-1");
+        HandlerMethod handler = new HandlerMethod(new RequiredTrueController(), "handleMethod");
+        boolean result = interceptor.preHandle(request, response, handler);
+        assertFalse(result);
+        assertEquals(400, response.getStatus());
+        assertTrue(response.getContentAsString().contains("Invalid userId format"));
+    }
+
+    @Test
+    void preHandle_headerWithWhitespace_trimsAndSetsUserId() throws Exception {
+        request.addHeader("X-User-Id", "  42  ");
+        HandlerMethod handler = new HandlerMethod(new RequiredTrueController(), "handleMethod");
+        boolean result = interceptor.preHandle(request, response, handler);
+        assertTrue(result);
+        assertEquals(42L, UserContext.getUserId());
+    }
+
+    @Test
+    void preHandle_errorResponse_isValidJsonWithCodeAndMsg() throws Exception {
+        HandlerMethod handler = new HandlerMethod(new RequiredTrueController(), "handleMethod");
+        interceptor.preHandle(request, response, handler);
+        String body = response.getContentAsString();
+        assertTrue(body.startsWith("{"));
+        assertTrue(body.endsWith("}"));
+        assertTrue(body.contains("\"code\""));
+        assertTrue(body.contains("\"msg\""));
+    }
+
+    @Test
     void preHandle_nonHandlerMethod_passesThrough() throws Exception {
         boolean result = interceptor.preHandle(request, response, "not-a-handler-method");
         assertTrue(result);
