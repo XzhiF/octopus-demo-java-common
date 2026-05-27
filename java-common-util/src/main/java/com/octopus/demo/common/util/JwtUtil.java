@@ -29,7 +29,7 @@ public final class JwtUtil {
     /**
      * Updates JWT configuration. Synchronized for thread-safe writes.
      * secretKey may be null in JwtConfig to indicate no key change.
-     * expirationDays may be negative for testing expired tokens.
+     * expirationDays must be > 0 — enforced by JwtConfig record validation.
      */
     public static synchronized void update(JwtConfig config) {
         Objects.requireNonNull(config, "JwtConfig must not be null");

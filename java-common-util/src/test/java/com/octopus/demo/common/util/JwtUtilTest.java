@@ -75,9 +75,15 @@ class JwtUtilTest {
     @Test
     @DisplayName("parseToken with expired token throws JwtTokenExpiredException")
     void parseToken_expiredToken_throwsExpiredException() {
-        JwtUtil.update(new JwtConfig(TEST_KEY_32, -1));
-        String token = JwtUtil.generateToken(1L);
-        assertThatThrownBy(() -> JwtUtil.parseToken(token))
+        SecretKey key = Keys.hmacShaKeyFor(TEST_KEY_32.getBytes(StandardCharsets.UTF_8));
+        String expiredToken = Jwts.builder()
+                .subject("1")
+                .issuedAt(new Date(System.currentTimeMillis() - 100000L))
+                .expiration(new Date(System.currentTimeMillis() - 1000L))
+                .signWith(key)
+                .compact();
+        JwtUtil.update(new JwtConfig(TEST_KEY_32, 30));
+        assertThatThrownBy(() -> JwtUtil.parseToken(expiredToken))
             .isInstanceOf(JwtTokenExpiredException.class);
     }
 
@@ -113,9 +119,15 @@ class JwtUtilTest {
     @Test
     @DisplayName("isTokenExpired with expired token returns true")
     void isTokenExpired_expiredToken_returnsTrue() {
-        JwtUtil.update(new JwtConfig(TEST_KEY_32, -1));
-        String token = JwtUtil.generateToken(1L);
-        assertThat(JwtUtil.isTokenExpired(token)).isTrue();
+        SecretKey key = Keys.hmacShaKeyFor(TEST_KEY_32.getBytes(StandardCharsets.UTF_8));
+        String expiredToken = Jwts.builder()
+                .subject("1")
+                .issuedAt(new Date(System.currentTimeMillis() - 100000L))
+                .expiration(new Date(System.currentTimeMillis() - 1000L))
+                .signWith(key)
+                .compact();
+        JwtUtil.update(new JwtConfig(TEST_KEY_32, 30));
+        assertThat(JwtUtil.isTokenExpired(expiredToken)).isTrue();
     }
 
     @Test
@@ -144,10 +156,16 @@ class JwtUtilTest {
     @Test
     @DisplayName("parseToken expired exception preserves cause")
     void parseToken_expiredToken_preservesCause() {
-        JwtUtil.update(new JwtConfig(TEST_KEY_32, -1));
-        String token = JwtUtil.generateToken(1L);
+        SecretKey key = Keys.hmacShaKeyFor(TEST_KEY_32.getBytes(StandardCharsets.UTF_8));
+        String expiredToken = Jwts.builder()
+                .subject("1")
+                .issuedAt(new Date(System.currentTimeMillis() - 100000L))
+                .expiration(new Date(System.currentTimeMillis() - 1000L))
+                .signWith(key)
+                .compact();
+        JwtUtil.update(new JwtConfig(TEST_KEY_32, 30));
         JwtTokenExpiredException ex = catchThrowableOfType(
-            () -> JwtUtil.parseToken(token), JwtTokenExpiredException.class);
+            () -> JwtUtil.parseToken(expiredToken), JwtTokenExpiredException.class);
         assertThat(ex.getCause()).isNotNull();
     }
 
