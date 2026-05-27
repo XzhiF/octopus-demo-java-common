@@ -115,6 +115,34 @@ class AuthInterceptorTest {
     }
 
     @Test
+    void preHandle_requiredFalse_invalidFormat_returns400() throws Exception {
+        request.addHeader("X-User-Id", "not-a-number");
+        HandlerMethod handler = new HandlerMethod(new RequiredFalseController(), "optionalMethod");
+        boolean result = interceptor.preHandle(request, response, handler);
+        assertFalse(result);
+        assertEquals(400, response.getStatus());
+        assertTrue(response.getContentAsString().contains("Invalid userId format"));
+    }
+
+    @Test
+    void preHandle_requiredFalse_emptyStringHeader_passesWithoutSetting() throws Exception {
+        request.addHeader("X-User-Id", "");
+        HandlerMethod handler = new HandlerMethod(new RequiredFalseController(), "optionalMethod");
+        boolean result = interceptor.preHandle(request, response, handler);
+        assertTrue(result);
+        assertNull(UserContext.getUserId());
+    }
+
+    @Test
+    void preHandle_requiredTrue_emptyStringHeader_returns401() throws Exception {
+        request.addHeader("X-User-Id", "");
+        HandlerMethod handler = new HandlerMethod(new RequiredTrueController(), "handleMethod");
+        boolean result = interceptor.preHandle(request, response, handler);
+        assertFalse(result);
+        assertEquals(401, response.getStatus());
+    }
+
+    @Test
     void preHandle_nonHandlerMethod_passesThrough() throws Exception {
         boolean result = interceptor.preHandle(request, response, "not-a-handler-method");
         assertTrue(result);

@@ -21,7 +21,7 @@ public class AuthAutoConfiguration implements WebMvcConfigurer {
     }
 
     @Bean
-    @ConditionalOnMissingBean(AuthInterceptor.class)
+    @ConditionalOnMissingBean
     public AuthInterceptor authInterceptor() {
         return new AuthInterceptor();
     }

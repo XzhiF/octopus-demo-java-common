@@ -3,6 +3,7 @@ package com.octopus.demo.common.auth;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -69,7 +70,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         if (methodAuth != null) {
             return methodAuth;
         }
-        return handlerMethod.getBeanType().getAnnotation(RequireAuth.class);
+        return AnnotationUtils.findAnnotation(handlerMethod.getBeanType(), RequireAuth.class);
     }
 
     private void writeErrorResponse(HttpServletResponse response, int statusCode, String message) throws IOException {
