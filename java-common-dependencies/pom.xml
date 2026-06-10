@@ -63,6 +63,11 @@
                 <artifactId>java-common-health</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.octopus.demo</groupId>
+                <artifactId>java-common-audit</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>
