@@ -22,15 +22,19 @@ public class AuditInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
                              Object handler) {
-        String userIdStr = request.getHeader(USER_ID_HEADER);
-        if (userIdStr != null && !userIdStr.isBlank()) {
-            try {
-                long userId = Long.parseLong(userIdStr.trim());
-                if (userId > 0) {
-                    UserContext.setUserId(userId);
+        // Only set UserContext if not already set by AuthInterceptor,
+        // avoiding overwriting authenticated user identity
+        if (UserContext.getUserId() == null) {
+            String userIdStr = request.getHeader(USER_ID_HEADER);
+            if (userIdStr != null && !userIdStr.isBlank()) {
+                try {
+                    long userId = Long.parseLong(userIdStr.trim());
+                    if (userId > 0) {
+                        UserContext.setUserId(userId);
+                    }
+                } catch (NumberFormatException e) {
+                    log.debug("Invalid X-User-Id header value: {}", userIdStr);
                 }
-            } catch (NumberFormatException e) {
-                log.debug("Invalid X-User-Id header value: {}", userIdStr);
             }
         }
         return true;

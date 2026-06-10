@@ -32,14 +32,14 @@ class AuditContextTest {
     }
 
     @Test
-    @DisplayName("clear removes both CURRENT_ACTION and UserContext")
-    void clear_removesActionAndUserContext() {
+    @DisplayName("clear removes CURRENT_ACTION but not UserContext (lifecycle managed by interceptor)")
+    void clear_removesActionOnly() {
         UserContext.setUserId(1L);
         AuditContext.setCurrentAction("DELETE");
 
         AuditContext.clear();
 
         assertNull(AuditContext.getCurrentAction());
-        assertNull(AuditContext.getCurrentUserId());
+        assertEquals(1L, AuditContext.getCurrentUserId(), "UserContext should not be cleared by AuditContext");
     }
 }

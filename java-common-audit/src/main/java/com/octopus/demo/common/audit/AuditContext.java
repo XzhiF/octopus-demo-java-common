@@ -30,6 +30,6 @@ public final class AuditContext {
 
     public static void clear() {
         CURRENT_ACTION.remove();
-        UserContext.clear();
+        // UserContext lifecycle managed by AuditInterceptor.afterCompletion
     }
 }
