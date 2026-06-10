@@ -58,6 +58,11 @@
                 <artifactId>java-common-util</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.octopus.demo</groupId>
+                <artifactId>java-common-health</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>
