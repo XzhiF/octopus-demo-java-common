@@ -31,13 +31,16 @@ public class InMemoryAuditLogger implements AuditLogger {
 
     @Override
     public List<AuditEvent> query(AuditQuery query) {
+        int effectiveLimit = query.limit() > 0
+            ? Math.min(query.limit(), MAX_SIZE)
+            : AuditQuery.DEFAULT_LIMIT;
         return events.stream()
             .filter(e -> query.userId() == null || query.userId().equals(e.userId()))
             .filter(e -> query.action() == null || query.action().equals(e.action()))
             .filter(e -> query.entityType() == null || query.entityType().equals(e.entityType()))
             .filter(e -> query.from() == null || !e.timestamp().isBefore(query.from()))
             .filter(e -> query.to() == null || !e.timestamp().isAfter(query.to()))
-            .limit(query.limit() > 0 ? query.limit() : AuditQuery.DEFAULT_LIMIT)
+            .limit(effectiveLimit)
             .toList();
     }
 
