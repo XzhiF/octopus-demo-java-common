@@ -25,6 +25,7 @@
         <module>java-common-auth</module>
         <module>java-common-util</module>
         <module>java-common-health</module>
+        <module>java-common-audit</module>
     </modules>
 
     <dependencyManagement>
@@ -73,6 +74,11 @@
             <dependency>
                 <groupId>com.octopus.demo</groupId>
                 <artifactId>java-common-health</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.octopus.demo</groupId>
+                <artifactId>java-common-audit</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

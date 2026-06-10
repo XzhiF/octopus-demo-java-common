@@ -14,12 +14,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @AutoConfiguration
 public class AuthAutoConfiguration implements WebMvcConfigurer {
 
-    private final AuthInterceptor authInterceptor;
-
-    public AuthAutoConfiguration(AuthInterceptor authInterceptor) {
-        this.authInterceptor = authInterceptor;
-    }
-
     @Bean
     @ConditionalOnMissingBean
     public AuthInterceptor authInterceptor() {
@@ -28,7 +22,7 @@ public class AuthAutoConfiguration implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(authInterceptor)
+        registry.addInterceptor(authInterceptor())
                 .addPathPatterns("/**");
     }
 }
