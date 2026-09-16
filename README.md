@@ -98,6 +98,7 @@ public class UserController {
 | `JwtAutoConfiguration` | Spring Boot 自动配置，自动注册 JwtUtil bean |
 | `JwtTokenExpiredException` | token 过期异常（code=401） |
 | `JwtTokenInvalidException` | token 无效异常（code=401） |
+| `DateUtils` | 日期工具：格式化 / 解析 / 日差 / 周末判断，固定 `yyyy-MM-dd HH:mm:ss`，非法入参永不抛异常 |
 
 引用方式：
 
@@ -122,6 +123,12 @@ Long userId = jwtUtil.parseToken(token);
 // 纯工具方式
 JwtUtil util = JwtUtil.createDefault();
 String token = util.generateToken(1L);
+
+// 日期工具（纯静态，非法入参返回 ""/null/false/0，不抛异常）
+String text = DateUtils.formatDate(LocalDateTime.now());          // "2026-09-16 10:30:00"
+LocalDateTime parsed = DateUtils.parseDate("2026-09-16 10:30:00");
+long days = DateUtils.daysBetween(LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 16)); // 15
+boolean weekend = DateUtils.isWeekend(LocalDate.of(2026, 9, 19)); // true（周六）
 ```
 
 配置项：
