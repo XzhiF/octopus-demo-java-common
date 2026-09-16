@@ -98,6 +98,15 @@ public class UserController {
 | `JwtAutoConfiguration` | Spring Boot 自动配置，自动注册 JwtUtil bean |
 | `JwtTokenExpiredException` | token 过期异常（code=401） |
 | `JwtTokenInvalidException` | token 无效异常（code=401） |
+| `MaskUtils` | PII 脱敏工具类：`maskPhone`（前3后4）、`maskIdCard`（前3后2）、`maskEmail`（用户名掩码、域名保留）；null/空白原样返回，不抛异常 |
+
+`MaskUtils` 使用示例（纯 JDK，无额外依赖）：
+
+```java
+MaskUtils.maskPhone("13812345678");            // 138****5678
+MaskUtils.maskIdCard("110101199003078888");    // 110*************88
+MaskUtils.maskEmail("someone@example.com");    // so****e@example.com
+```
 
 引用方式：
 
