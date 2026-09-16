@@ -98,6 +98,7 @@ public class UserController {
 | `JwtAutoConfiguration` | Spring Boot 自动配置，自动注册 JwtUtil bean |
 | `JwtTokenExpiredException` | token 过期异常（code=401） |
 | `JwtTokenInvalidException` | token 无效异常（code=401） |
+| `DateUtils` | 日期工具：格式化 / 解析 / 带符号天数差 / 周末判断，固定 `yyyy-MM-dd HH:mm:ss`；null/非法入参永不抛异常（返回 `""` / `null` / `0` / `false`） |
 
 引用方式：
 
@@ -122,6 +123,9 @@ Long userId = jwtUtil.parseToken(token);
 // 纯工具方式
 JwtUtil util = JwtUtil.createDefault();
 String token = util.generateToken(1L);
+
+// DateUtils 日期工具（纯静态，永不抛异常）
+String text = DateUtils.formatDate(LocalDateTime.of(2026, 9, 16, 10, 30, 0));  // "2026-09-16 10:30:00"
 ```
 
 配置项：
