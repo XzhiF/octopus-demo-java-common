@@ -98,6 +98,7 @@ public class UserController {
 | `JwtAutoConfiguration` | Spring Boot 自动配置，自动注册 JwtUtil bean |
 | `JwtTokenExpiredException` | token 过期异常（code=401） |
 | `JwtTokenInvalidException` | token 无效异常（code=401） |
+| `PhoneUtils` | 手机号校验与脱敏（`isMobile`、`mask`，永不抛异常） |
 
 引用方式：
 
@@ -122,6 +123,10 @@ Long userId = jwtUtil.parseToken(token);
 // 纯工具方式
 JwtUtil util = JwtUtil.createDefault();
 String token = util.generateToken(1L);
+
+// 手机号工具：校验与脱敏（非法/null 输入永不抛异常）
+boolean ok = PhoneUtils.isMobile("13812345678");   // true
+String hidden = PhoneUtils.mask("13812345678");    // "138****5678"
 ```
 
 配置项：
