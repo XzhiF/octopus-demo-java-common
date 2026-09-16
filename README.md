@@ -127,6 +127,7 @@ String token = util.generateToken(1L);
 // 手机号工具：校验与脱敏（非法/null 输入永不抛异常）
 boolean ok = PhoneUtils.isMobile("13812345678");   // true
 String hidden = PhoneUtils.mask("13812345678");    // "138****5678"
+String nullMasked = PhoneUtils.mask(null);         // "***********"（null → 固定 11 字符全遮星串）
 ```
 
 配置项：

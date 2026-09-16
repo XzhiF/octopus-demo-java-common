@@ -4,10 +4,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 /**
  * Boundary tests for {@link PhoneUtils} (ticket 02).
- * Expected values come from spec US1-US3 / KD1-KD2, not from the implementation.
+ * Expected values come from spec US1-US4 / KD1-KD2 (incl. NEW-r1 11-star null
+ * contract), not from the implementation.
  */
 class PhoneUtilsTest {
 
@@ -82,9 +84,9 @@ class PhoneUtilsTest {
     }
 
     @Test
-    @DisplayName("mask returns empty string for null")
-    void mask_null_returnsEmpty() {
-        assertThat(PhoneUtils.mask(null)).isEmpty();
+    @DisplayName("mask returns fixed 11-star string for null (spec US4 / KD2 NEW-r1)")
+    void mask_null_returnsElevenStars() {
+        assertThat(PhoneUtils.mask(null)).isEqualTo("***********");
     }
 
     @Test
@@ -106,8 +108,18 @@ class PhoneUtilsTest {
     }
 
     @Test
-    @DisplayName("mask of empty string returns empty string")
+    @DisplayName("mask of empty string returns empty string (concrete value, NEW-r1)")
     void mask_empty_returnsEmpty() {
-        assertThat(PhoneUtils.mask("")).isEmpty();
+        assertThat(PhoneUtils.mask("")).isEqualTo("");
+    }
+
+    @Test
+    @DisplayName("KD2 never-throws discipline: mask survives null/empty/short/non-digit/invalid-11 inputs")
+    void mask_neverThrows_onAllBoundaryInputs() {
+        assertDoesNotThrow(() -> PhoneUtils.mask(null));
+        assertDoesNotThrow(() -> PhoneUtils.mask(""));
+        assertDoesNotThrow(() -> PhoneUtils.mask("1381234"));
+        assertDoesNotThrow(() -> PhoneUtils.mask("12ab34"));
+        assertDoesNotThrow(() -> PhoneUtils.mask("12812345678"));
     }
 }

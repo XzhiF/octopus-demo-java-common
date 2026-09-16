@@ -6,7 +6,8 @@ package com.octopus.demo.common.util;
  *
  * <p>Hard constraint: never throws. Invalid (non-null) input yields {@code false}
  * from {@code isMobile} or a same-length all-'*' string from {@code mask};
- * null input yields {@code false} / {@code ""} respectively.
+ * null input yields {@code false} / a fixed 11-character all-'*' string
+ * ({@code "***********"} — the mobile-number length convention) respectively.
  */
 public final class PhoneUtils {
 
@@ -40,12 +41,13 @@ public final class PhoneUtils {
 
     /**
      * Masks a valid mobile number in 3-4-4 form, e.g. {@code "13812345678"} →
-     * {@code "138****5678"}. Any other input is replaced by an all-'*' string of
-     * the same length; null returns "".
+     * {@code "138****5678"}. Any other non-null input is replaced by an all-'*'
+     * string of the same length; null returns the fixed 11-character string
+     * {@code "***********"}.
      */
     public static String mask(String phone) {
         if (phone == null) {
-            return "";
+            return "***********";
         }
         if (isMobile(phone)) {
             return phone.substring(0, 3) + "****" + phone.substring(7);
