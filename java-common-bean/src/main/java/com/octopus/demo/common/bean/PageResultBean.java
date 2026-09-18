@@ -10,6 +10,7 @@ import java.util.List;
 public class PageResultBean<T> {
 
     private long count;
+    private long totalPage;
     private List<T> list = Collections.emptyList();
 
     public long getCount() {
@@ -18,6 +19,14 @@ public class PageResultBean<T> {
 
     public void setCount(long count) {
         this.count = count;
+    }
+
+    public long getTotalPage() {
+        return totalPage;
+    }
+
+    public void setTotalPage(long totalPage) {
+        this.totalPage = totalPage;
     }
 
     public List<T> getList() {
