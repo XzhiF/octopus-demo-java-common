@@ -1,1 +1,3 @@
-com.octopus.demo.common.util.JwtAutoConfiguration
+# java-common-util registers no Spring auto-configurations (JwtConfig is a plain
+# record, JwtUtil is a static helper). The previously listed JwtAutoConfiguration
+# never existed in source — removed to let consumers boot.
