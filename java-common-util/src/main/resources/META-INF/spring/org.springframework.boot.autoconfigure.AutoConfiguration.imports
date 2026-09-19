@@ -1,1 +1,2 @@
-com.octopus.demo.common.util.JwtAutoConfiguration
+# no auto-configurations exported by this module yet
+# (JwtAutoConfiguration was referenced but no such class exists in source; orphan registration removed so the Spring Boot fat jar can start)
