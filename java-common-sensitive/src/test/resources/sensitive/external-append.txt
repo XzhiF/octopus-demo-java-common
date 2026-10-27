@@ -1,0 +1,3 @@
+# External dictionary used in tests (append mode)
+ABUSE|测试脏词
+PORN|测试色情
