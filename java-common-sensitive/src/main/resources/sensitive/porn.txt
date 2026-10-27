@@ -1,0 +1,24 @@
+# Built-in PORN dictionary — demo scale, mild representative entries.
+# Format: 类别|词
+PORN|色情
+PORN|裸聊
+PORN|裸照
+PORN|黄片
+PORN|成人片
+PORN|卖淫
+PORN|嫖娼
+PORN|情色
+PORN|艳照
+PORN|约炮
+PORN|一夜情
+PORN|淫秽
+PORN|色诱
+PORN|裸体
+PORN|黄图
+PORN|porn
+PORN|porno
+PORN|nude
+PORN|nudes
+PORN|sexcam
+PORN|hentai
+PORN|erotic
