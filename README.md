@@ -133,6 +133,48 @@ octopus:
     expiration-days: 30  # 默认30天
 ```
 
+#### 敏感词过滤
+
+内置「辱骂 / 色情」两类别默认词库，Trie(DFA) 字符树 O(n) 扫描；匹配前归一化（大小写折叠、全角转半角、词中干扰符剥离），命中位置映射回原文。实例构建后不可变，可安全并发复用。
+
+| 类 | 说明 |
+|---|---|
+| `SensitiveWordFilter` | 过滤核心，`builder()` 构建，`detect`/`mask` 两个入口 |
+| `SensitiveWordHit` | record：`word`（归一词）、`category`、`startIndex`/`endIndex`（原文坐标，含端点） |
+| `SensitiveWordCategory` | enum：`INSULT`（辱骂）、`PORNO`（色情） |
+| `WordEntry` | record：`word` + `category`，override 词表条目 |
+
+依赖坐标同上（`com.octopus.demo:java-common-util`）。
+
+默认用法：
+
+```java
+SensitiveWordFilter filter = SensitiveWordFilter.builder().build();
+
+List<SensitiveWordHit> hits = filter.detect("你个傻逼"); // [SensitiveWordHit[word=傻逼, category=INSULT, startIndex=2, endIndex=3]]
+String masked = filter.mask("你个傻逼");                  // "你个**"
+```
+
+`detect(null)` / `detect("")` 返回空列表；`mask(null)` 原样返回；干净文本零误报。变体（`傻★逼`、`ＦＵＣＫ`、`傻 逼`）同样命中，位置指回原文整段。
+
+自定义词库：
+
+```java
+// append：在默认词库上追加业务专属违禁词（显式指定类别），检测按并集生效
+SensitiveWordFilter appended = SensitiveWordFilter.builder()
+        .appendWords(SensitiveWordCategory.INSULT, List.of("专属违禁词"))
+        .build();
+
+// override：完全替换默认词库，实例只认传入词表
+SensitiveWordFilter override = SensitiveWordFilter.builder()
+        .overrideWords(List.of(new WordEntry("专属违禁词", SensitiveWordCategory.PORNO)))
+        .build();
+```
+
+合并语义：append 去重；同词跨类别冲突时自定义类别覆盖默认词库。换词库 = 重建实例，不支持运行时热重载。
+
+词库维护：默认词库为 classpath 资源 `src/main/resources/sensitive-words.txt`，行式 `类别:词`（如 `INSULT:傻逼`），`#` 开头为注释；增删词直接改文件即可生效，无需改代码。非法行跳过、不中断构建。
+
 ## 构建命令
 
 ```bash
