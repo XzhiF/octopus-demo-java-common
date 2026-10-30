@@ -46,6 +46,27 @@ class NameRuleTest {
     }
 
     @Test
+    @DisplayName("space as separator still masks the name")
+    void find_spaceSeparator_masksName() {
+        assertThat(rule.find("姓名 张三"))
+                .isEqualTo(List.of(new MaskHit(3, 5, "张*")));
+    }
+
+    @Test
+    @DisplayName("no separator at all still masks the name")
+    void find_noSeparator_masksName() {
+        assertThat(rule.find("联系人张三"))
+                .isEqualTo(List.of(new MaskHit(3, 5, "张*")));
+    }
+
+    @Test
+    @DisplayName("field label following the anchor is not mistaken for a name")
+    void find_followingFieldLabel_noHit() {
+        assertThat(rule.find("收货人地址：北京市朝阳区")).isEmpty();
+        assertThat(rule.find("联系人名单")).isEmpty();
+    }
+
+    @Test
     @DisplayName("label with empty value is not a hit")
     void find_emptyName_noHit() {
         assertThat(rule.find("姓名：")).isEmpty();
