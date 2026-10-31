@@ -100,7 +100,7 @@ public class UserController {
 | `JwtTokenInvalidException` | token 无效异常（code=401） |
 | `PhraseMatchUtils` | ES 风格短语匹配（slop + 评分 + 命中区间） |
 | `PhraseMatchResult` | 匹配结果记录（`matched` / `score` / `actualSlop` / `startToken` / `endToken`） |
-| `Tokenizer` | 可插拔分词契约（默认实现 `SimpleTokenizer`） |
+| `MaskUtils` | 敏感信息脱敏（手机号 `138****8000`、邮箱 `z***@example.com`、昵称 `张*`）；非空非法输入保守遮罩，星号数量固定 |
 
 引用方式：
 
