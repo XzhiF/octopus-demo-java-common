@@ -98,6 +98,7 @@ public class UserController {
 | `JwtAutoConfiguration` | Spring Boot 自动配置，自动注册 JwtUtil bean |
 | `JwtTokenExpiredException` | token 过期异常（code=401） |
 | `JwtTokenInvalidException` | token 无效异常（code=401） |
+| `MaskUtils` | 敏感信息脱敏（手机号 `138****8000`、邮箱 `z***@example.com`、昵称 `张*`）；非空非法输入保守遮罩，星号数量固定 |
 
 引用方式：
 

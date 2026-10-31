@@ -8,6 +8,7 @@
  * - AEDConfig: configuration record for AEDUtils settings
  * - MD5Utils: MD5 hash digest utility (not for password storage)
  * - HighlightingUtils: keyword highlighting for search results
+ * - MaskUtils: sensitive value masking for phone, email and nickname
  * - JwtTokenExpiredException: exception thrown when JWT token is expired
  * - JwtTokenInvalidException: exception thrown when JWT token is invalid
  */
