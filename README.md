@@ -98,6 +98,8 @@ public class UserController {
 | `JwtAutoConfiguration` | Spring Boot 自动配置，自动注册 JwtUtil bean |
 | `JwtTokenExpiredException` | token 过期异常（code=401） |
 | `JwtTokenInvalidException` | token 无效异常（code=401） |
+| `PhraseMatchUtils` | ES 风格短语匹配（slop + 评分 + 命中区间） |
+| `PhraseMatchResult` | 匹配结果记录（`matched` / `score` / `actualSlop` / `startToken` / `endToken`） |
 | `MaskUtils` | 敏感信息脱敏（手机号 `138****8000`、邮箱 `z***@example.com`、昵称 `张*`）；非空非法输入保守遮罩，星号数量固定 |
 
 引用方式：
@@ -133,6 +135,47 @@ octopus:
     secret-key: ""       # 空=自动随机生成，生产环境必须配置固定密钥
     expiration-days: 30  # 默认30天
 ```
+
+### PhraseMatch
+
+`PhraseMatchUtils` 判断短语是否在允许的距离内出现，语义对齐 ES/Lucene 的 phrase slop：
+
+- 评分：`score = 1 / (1 + actualSlop)`，严格短语得 `1.0`，未命中为 `0.0`；
+- 返回 `PhraseMatchResult(boolean matched, double score, int actualSlop, int startToken, int endToken)`；
+- `slop` 为允许的最大位置移动总量，相邻词项换位需要 `slop >= 2`。
+
+API：
+
+```java
+public static PhraseMatchResult match(String text, String phrase, int slop);
+public static PhraseMatchResult match(String text, String phrase, int slop, Tokenizer tokenizer);
+public static PhraseMatchResult matchTokens(List<String> documentTokens, List<String> phraseTokens, int slop);
+```
+
+使用示例：
+
+```java
+// 精确短语：actualSlop=0, score=1.0, span 1..3
+PhraseMatchResult exact = PhraseMatchUtils.match("the quick brown fox", "quick brown fox", 0);
+// exact.matched() == true, exact.startToken() == 1, exact.endToken() == 3
+
+// slop 命中：允许词项间插入 1 个无关词 → actualSlop=1, score=0.5
+PhraseMatchResult near = PhraseMatchUtils.match("quick very brown fox", "quick brown fox", 1);
+// near.matched() == true, near.actualSlop() == 1, near.score() == 0.5
+
+// 换位：相邻词项互换位置需要 slop=2 → actualSlop=2, score≈0.333
+PhraseMatchResult swapped = PhraseMatchUtils.match("quick fox brown", "quick brown fox", 2);
+// swapped.matched() == true, swapped.score() == 1.0 / 3.0
+
+// 自定义 Tokenizer：按空白切分并保留大小写
+Tokenizer caseSensitive = text -> text == null || text.isBlank()
+        ? List.of()
+        : Arrays.asList(text.trim().split("\\s+"));
+PhraseMatchUtils.match("Hello World", "Hello World", 0, caseSensitive).matched(); // true
+PhraseMatchUtils.match("Hello World", "hello world", 0, caseSensitive).matched(); // false
+```
+
+CJK 说明：默认 `SimpleTokenizer` 按码点逐字切分（`"上海"` → `["上", "海"]`），因此中文短语只能做字级匹配；如需词级分词（如 `"上海"` 作为整体一个词），请通过自定义 `Tokenizer` 提供。
 
 ## 构建命令
 
