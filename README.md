@@ -46,13 +46,13 @@ BOM 模块，统一管理所有依赖版本。其他项目通过 `<scope>import<
 
 ### java-common-auth
 
-认证模块，提供基于注解的 userId 提取机制。
+认证模块，提供基于注解的 Bearer JWT 认证机制。
 
 | 类 | 说明 |
 |---|---|
 | `@RequireAuth` | 标注 Controller 类或方法，支持 `required` 参数（默认 true） |
 | `UserContext` | ThreadLocal 包装类，获取当前请求的 userId |
-| `AuthInterceptor` | Spring MVC 拦截器，从 X-User-Id header 提取 userId |
+| `AuthInterceptor` | Spring MVC 拦截器，校验 `Authorization: Bearer <JWT>` 并把 userId 写入 UserContext |
 | `AuthAutoConfiguration` | Spring Boot 自动配置，自动注册拦截器 |
 
 引用方式：
@@ -69,7 +69,7 @@ BOM 模块，统一管理所有依赖版本。其他项目通过 `<scope>import<
 
 ```java
 @RestController
-@RequireAuth  // 类级别，所有方法默认需要 userId
+@RequireAuth  // 类级别，所有方法默认需要有效 Bearer token
 public class UserController {
 
     @GetMapping("/profile")
@@ -79,7 +79,7 @@ public class UserController {
     }
 
     @GetMapping("/public-info")
-    @RequireAuth(required = false)  // 方法级覆盖，userId 可选
+    @RequireAuth(required = false)  // 方法级覆盖，token 可选
     public R<?> getPublicInfo() {
         Long userId = UserContext.getUserId();  // 可能为 null
         // ...
@@ -89,7 +89,7 @@ public class UserController {
 
 ### java-common-util
 
-工具模块，提供 JWT 生成与解析功能。
+工具模块，提供 JWT、密码哈希、脱敏与文本匹配等工具。
 
 | 类 | 说明 |
 |---|---|
@@ -98,6 +98,7 @@ public class UserController {
 | `JwtAutoConfiguration` | Spring Boot 自动配置，自动注册 JwtUtil bean |
 | `JwtTokenExpiredException` | token 过期异常（code=401） |
 | `JwtTokenInvalidException` | token 无效异常（code=401） |
+| `PasswordUtils` | PBKDF2-HmacSHA256 密码哈希与校验（随机盐、恒定时间比较、零外部依赖） |
 | `PhraseMatchUtils` | ES 风格短语匹配（slop + 评分 + 命中区间） |
 | `PhraseMatchResult` | 匹配结果记录（`matched` / `score` / `actualSlop` / `startToken` / `endToken`） |
 | `MaskUtils` | 敏感信息脱敏（手机号 `138****8000`、邮箱 `z***@example.com`、昵称 `张*`）；非空非法输入保守遮罩，星号数量固定 |
