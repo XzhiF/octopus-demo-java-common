@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks a Controller class or method as requiring userId from X-User-Id header.
+ * Marks a Controller class or method as requiring a Bearer token in the Authorization header.
  * Method-level annotation overrides class-level required setting.
  */
 @Target({ElementType.METHOD, ElementType.TYPE})

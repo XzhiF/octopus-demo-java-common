@@ -1,5 +1,6 @@
 package com.octopus.demo.common.auth;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -14,10 +15,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @AutoConfiguration
 public class AuthAutoConfiguration implements WebMvcConfigurer {
 
-    private final AuthInterceptor authInterceptor;
+    private final ObjectProvider<AuthInterceptor> authInterceptorProvider;
 
-    public AuthAutoConfiguration(AuthInterceptor authInterceptor) {
-        this.authInterceptor = authInterceptor;
+    public AuthAutoConfiguration(ObjectProvider<AuthInterceptor> authInterceptorProvider) {
+        this.authInterceptorProvider = authInterceptorProvider;
     }
 
     @Bean
@@ -28,7 +29,7 @@ public class AuthAutoConfiguration implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(authInterceptor)
+        registry.addInterceptor(authInterceptorProvider.getObject())
                 .addPathPatterns("/**");
     }
 }

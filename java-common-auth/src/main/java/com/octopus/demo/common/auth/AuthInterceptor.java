@@ -1,6 +1,9 @@
 package com.octopus.demo.common.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.octopus.demo.common.util.JwtTokenExpiredException;
+import com.octopus.demo.common.util.JwtTokenInvalidException;
+import com.octopus.demo.common.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -13,12 +16,14 @@ import java.util.Map;
 
 /**
  * Intercepts requests to Controller methods/classes annotated with @RequireAuth.
- * Extracts userId from X-User-Id header into UserContext ThreadLocal.
+ * Accepts only {@code Authorization: Bearer <JWT>}; the token is parsed by JwtUtil
+ * and the resulting userId is stored in UserContext ThreadLocal.
  * Clears UserContext in afterCompletion to prevent thread-pool reuse leaks.
  */
 public class AuthInterceptor implements HandlerInterceptor {
 
-    private static final String USER_ID_HEADER = "X-User-Id";
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Override
@@ -32,37 +37,50 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        String userIdStr = request.getHeader(USER_ID_HEADER);
-        if (userIdStr != null) {
-            userIdStr = userIdStr.trim();
-        }
-
-        if (userIdStr != null && !userIdStr.isEmpty()) {
-            try {
-                long userId = Long.parseLong(userIdStr);
-                if (userId <= 0) {
-                    writeErrorResponse(response, HttpStatus.BAD_REQUEST.value(), "Invalid userId format");
-                    return false;
-                }
-                UserContext.setUserId(userId);
-                return true;
-            } catch (NumberFormatException e) {
-                writeErrorResponse(response, HttpStatus.BAD_REQUEST.value(), "Invalid userId format");
+        String authorization = request.getHeader(AUTHORIZATION_HEADER);
+        if (authorization == null || authorization.trim().isEmpty()) {
+            if (auth.required()) {
+                writeErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "Missing required token");
                 return false;
             }
+            return true;
         }
 
-        if (auth.required()) {
-            writeErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "Missing required userId");
+        String token = extractBearerToken(authorization);
+        if (token == null) {
+            writeErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "Invalid token");
             return false;
         }
 
-        return true;
+        try {
+            Long userId = JwtUtil.parseToken(token);
+            if (userId == null || userId <= 0) {
+                writeErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "Invalid token");
+                return false;
+            }
+            UserContext.setUserId(userId);
+            return true;
+        } catch (JwtTokenExpiredException e) {
+            writeErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "Token expired");
+            return false;
+        } catch (JwtTokenInvalidException e) {
+            writeErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "Invalid token");
+            return false;
+        }
     }
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         UserContext.clear();
+    }
+
+    private String extractBearerToken(String authorization) {
+        String header = authorization.trim();
+        if (!header.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
+            return null;
+        }
+        String token = header.substring(BEARER_PREFIX.length()).trim();
+        return token.isEmpty() ? null : token;
     }
 
     private RequireAuth getAuthAnnotation(HandlerMethod handlerMethod) {
