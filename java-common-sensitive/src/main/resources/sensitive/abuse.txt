@@ -1,0 +1,26 @@
+# Built-in ABUSE dictionary — demo scale, mild representative entries.
+# Format: 类别|词
+ABUSE|蠢货
+ABUSE|滚蛋
+ABUSE|白痴
+ABUSE|傻瓜
+ABUSE|笨蛋
+ABUSE|废物
+ABUSE|混蛋
+ABUSE|贱人
+ABUSE|去死
+ABUSE|脑残
+ABUSE|智障
+ABUSE|人渣
+ABUSE|蠢驴
+ABUSE|bastard
+ABUSE|idiot
+ABUSE|moron
+ABUSE|stupid
+ABUSE|dumbass
+ABUSE|jackass
+ABUSE|loser
+ABUSE|jerk
+ABUSE|scum
+ABUSE|王八蛋
+ABUSE|狗东西

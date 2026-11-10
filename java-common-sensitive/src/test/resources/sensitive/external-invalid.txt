@@ -1,0 +1,3 @@
+# External dictionary used in tests — line 3 has an invalid category
+ABUSE|合法词条
+NOT_A_CATEGORY|非法行

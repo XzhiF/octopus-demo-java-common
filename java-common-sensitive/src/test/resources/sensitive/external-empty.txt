@@ -1,0 +1,3 @@
+# External dictionary used in tests — contains no valid entries
+# (comments and blank lines only)
+

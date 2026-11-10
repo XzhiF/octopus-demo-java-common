@@ -1,0 +1,2 @@
+# External dictionary used in tests (replace mode)
+ABUSE|自定义辱骂
